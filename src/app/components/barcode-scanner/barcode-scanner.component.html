@@ -1,0 +1,93 @@
+<div class="scanner-wrapper">
+  <div class="scanner-header">
+    <div class="scanner-title">
+      <span class="scanner-icon">📷</span>
+      <span>Barcode Scanner</span>
+    </div>
+    <div class="scanner-actions">
+      @if (!isScanning && !isStarting) {
+        <button class="btn-start" (click)="startScanner()" id="btn-start-scanner">
+          <span>▶</span> Start Camera
+        </button>
+      } @else if (isStarting) {
+        <button class="btn-starting" disabled id="btn-starting-scanner">
+          <span class="starting-spinner"></span> Starting…
+        </button>
+      } @else {
+        <button class="btn-stop" (click)="stopScanner()" id="btn-stop-scanner">
+          <span>■</span> Stop Camera
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Camera Preview -->
+  <div #readerContainer class="reader-container" [class.active]="isScanning">
+
+    <!-- html5-qrcode renders the video inside this div -->
+    <div id="pos-qr-reader" class="qr-reader"></div>
+
+    <!-- Scanning animation overlay (only shown when scanning) -->
+    @if (isScanning) {
+      <div class="scan-overlay">
+        <div class="scan-line"></div>
+        <div class="scan-corners">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+        </div>
+      </div>
+    }
+
+    <!-- Placeholder when not scanning -->
+    @if (!isScanning && !isStarting) {
+      <div class="reader-placeholder">
+        <div class="placeholder-icon">🔍</div>
+        <p>Camera preview will appear here</p>
+        <p class="placeholder-sub">Click "Start Camera" to begin scanning</p>
+      </div>
+    }
+  </div>
+
+  <!-- Live scan status -->
+  @if (scanStatus) {
+    <div class="scan-status" [class.scan-success]="scanStatus.startsWith('✅')">
+      {{ scanStatus }}
+    </div>
+  }
+
+  <!-- Last scanned value -->
+  @if (lastScanned && !scanStatus) {
+    <div class="last-scanned">
+      <span class="scanned-label">Last Scanned:</span>
+      <span class="scanned-value">{{ lastScanned }}</span>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="scanner-error">
+      <span>⚠️</span> {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Manual Barcode Input -->
+  <div class="manual-input-section">
+    <label class="manual-label">Manual Barcode / F2</label>
+    <div class="manual-row">
+      <input
+        #manualInput
+        id="manual-barcode-input"
+        type="text"
+        class="manual-input"
+        [(ngModel)]="manualBarcode"
+        (keydown)="onManualKeydown($event)"
+        placeholder="Type or paste barcode and press Enter…"
+        autocomplete="off"
+      />
+      <button class="btn-submit-manual" (click)="submitManual()" id="btn-submit-barcode">
+        Add →
+      </button>
+    </div>
+  </div>
+</div>

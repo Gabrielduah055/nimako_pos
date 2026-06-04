@@ -1,0 +1,99 @@
+<div class="pos-page">
+
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <header class="pos-header">
+    <div class="header-brand">
+      <span class="header-logo">🧼</span>
+      <div class="header-brand-text">
+        <span class="header-title">Nimako POS</span>
+        <span class="header-subtitle">Point of Sale Terminal</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="live-clock">
+        <span class="clock-time">{{ currentTime | date:'HH:mm:ss' }}</span>
+        <span class="clock-date">{{ currentTime | date:'EEE, d MMM yyyy' }}</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="cashier-info">
+        <div class="cashier-avatar">
+          {{ currentUser?.name?.charAt(0)?.toUpperCase() || 'C' }}
+        </div>
+        <div class="cashier-details">
+          <span class="cashier-greeting">{{ greeting }},</span>
+          <span class="cashier-name">{{ currentUser?.name || 'Cashier' }}</span>
+        </div>
+      </div>
+
+      <button class="btn-new-sale" (click)="newSale()" id="btn-header-new-sale" title="New Sale (F1)">
+        ➕ New Sale
+      </button>
+
+      <button class="btn-logout" (click)="logout()" id="btn-header-logout" title="Logout (Ctrl+Shift+L)">
+        ⏻
+      </button>
+    </div>
+  </header>
+
+  <!-- ─── Keyboard shortcuts hint ────────────────────────────── -->
+  <div class="shortcuts-bar">
+    <span class="shortcut"><kbd>F1</kbd> New Sale</span>
+    <span class="shortcut"><kbd>F2</kbd> Scanner</span>
+    <span class="shortcut"><kbd>F3</kbd> Search</span>
+    <span class="shortcut"><kbd>Ctrl+Shift+L</kbd> Logout</span>
+  </div>
+
+  <!-- ─── Main Layout ─────────────────────────────────────────── -->
+  <main class="pos-main">
+
+    <!-- Left Column: Scanner + Search -->
+    <section class="left-column">
+      <!-- Barcode Scanner -->
+      <app-barcode-scanner
+        (barcodeScanned)="onBarcodeScanned($event)"
+      ></app-barcode-scanner>
+
+      <!-- Product Search -->
+      <app-product-search
+        (productSelected)="onProductSelected($event)"
+      ></app-product-search>
+    </section>
+
+    <!-- Right Column: Cart -->
+    <section class="right-column">
+      <app-cart
+        [items]="cartItems"
+        (itemsChange)="onCartUpdated($event)"
+        (checkoutRequested)="openCheckout()"
+        (cartCleared)="newSale()"
+      ></app-cart>
+    </section>
+
+  </main>
+
+  <!-- ─── Checkout Modal ──────────────────────────────────────── -->
+  @if (showCheckout) {
+    <app-checkout-modal
+      [items]="cartItems"
+      [subtotal]="cartSubtotal"
+      [discountAmount]="cartDiscount"
+      [total]="cartTotal"
+      (closed)="onCheckoutClosed()"
+      (saleCompleted)="onSaleCompleted()"
+    ></app-checkout-modal>
+  }
+
+  <!-- ─── Toast Notification ─────────────────────────────────── -->
+  @if (toastMessage) {
+    <div class="pos-toast" [ngClass]="'toast-' + toastType" role="alert">
+      @if (toastType === 'success') { <span>✅</span> }
+      @if (toastType === 'error') { <span>❌</span> }
+      @if (toastType === 'info') { <span>ℹ️</span> }
+      {{ toastMessage }}
+    </div>
+  }
+
+</div>

@@ -1,0 +1,275 @@
+<div class="checkout-backdrop" (click)="close()">
+  <div class="checkout-modal" (click)="$event.stopPropagation()">
+
+    <!-- ══════════════════ SUCCESS / RECEIPT STATE ══════════════════ -->
+    @if (successSale) {
+      <div class="receipt-page">
+
+        <!-- Screen-only actions bar (hidden on print) -->
+        <div class="receipt-actions no-print">
+          <div class="receipt-success-badge">
+            <span class="badge-check">✓</span>
+            <span>Sale Complete!</span>
+          </div>
+          <div class="receipt-action-btns">
+            <button class="btn-print-receipt" (click)="printReceipt()" id="btn-print-receipt">
+              <span>🖨</span> Print
+            </button>
+            <button class="btn-new-sale-receipt" (click)="startNewSale()" id="btn-new-sale">
+              ➕ New Sale
+            </button>
+          </div>
+        </div>
+
+        <!-- ── THERMAL RECEIPT PAPER ── -->
+        <div class="thermal-receipt printable" id="thermal-receipt-print">
+
+          <!-- Torn top edge -->
+          <div class="tear-edge top-tear"></div>
+
+          <!-- Store Header -->
+          <div class="receipt-store-header">
+            <div class="store-logo-circle">🧼</div>
+            <h1 class="store-name">NIMAKO POS</h1>
+            <p class="store-tagline">Point of Sale Terminal</p>
+          </div>
+
+          <!-- Dotted divider -->
+          <div class="receipt-dots"></div>
+
+          <!-- Meta info — uses successSale for server-generated fields -->
+          <div class="receipt-meta">
+            <div class="meta-row">
+              <span class="meta-key">Invoice</span>
+              <span class="meta-val">{{ successSale.invoiceNumber || ('TXN-' + (successSale._id || '').slice(-8).toUpperCase()) }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Date</span>
+              <span class="meta-val">{{ (successSale.createdAt || '') | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Time</span>
+              <span class="meta-val">{{ (successSale.createdAt || '') | date:'HH:mm:ss' }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Cashier</span>
+              <span class="meta-val">{{ successSale.cashierName || cashierName }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Payment</span>
+              <span class="meta-val payment-badge">
+                @if (snapshotPaymentMethod === 'cash')     { 💵 Cash }
+                @if (snapshotPaymentMethod === 'transfer') { 📱 Transfer }
+                @if (snapshotPaymentMethod === 'mixed')    { 🔀 Mixed }
+              </span>
+            </div>
+          </div>
+
+          <!-- Dotted divider -->
+          <div class="receipt-dots"></div>
+
+          <!-- Column headers -->
+          <div class="receipt-col-header">
+            <span class="col-item">ITEM</span>
+            <span class="col-qty">QTY</span>
+            <span class="col-price">PRICE</span>
+            <span class="col-total">TOTAL</span>
+          </div>
+
+          <div class="receipt-line-thin"></div>
+
+          <!-- Items — uses snapshotItems (captured from cart before submission) -->
+          <div class="receipt-items">
+            @for (item of snapshotItems; track item.productId) {
+              <div class="receipt-item-row">
+                <span class="col-item item-name-wrap">
+                  {{ item.name }}
+                  <small class="item-unit-tag">{{ item.unitType }}</small>
+                </span>
+                <span class="col-qty">{{ item.quantity }}</span>
+                <span class="col-price">GH₵{{ item.unitPrice | number:'1.2-2' }}</span>
+                <span class="col-total">GH₵{{ item.total | number:'1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Dotted divider -->
+          <div class="receipt-dots"></div>
+
+          <!-- Totals — uses snapshot values -->
+          <div class="receipt-totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span>GH₵{{ snapshotSubtotal | number:'1.2-2' }}</span>
+            </div>
+            @if (snapshotDiscount > 0) {
+              <div class="total-row discount-row">
+                <span>Discount</span>
+                <span>−GH₵{{ snapshotDiscount | number:'1.2-2' }}</span>
+              </div>
+            }
+            <div class="receipt-line-thin"></div>
+            <div class="total-row grand-total-row">
+              <span>TOTAL</span>
+              <span>GH₵{{ snapshotTotal | number:'1.2-2' }}</span>
+            </div>
+            @if (snapshotPaymentMethod !== 'transfer' && snapshotCashReceived > 0) {
+              <div class="total-row cash-row">
+                <span>Cash Received</span>
+                <span>GH₵{{ snapshotCashReceived | number:'1.2-2' }}</span>
+              </div>
+              <div class="total-row change-row">
+                <span>Change</span>
+                <span>GH₵{{ (snapshotCashReceived - snapshotTotal) | number:'1.2-2' }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Dotted divider -->
+          <div class="receipt-dots"></div>
+
+          <!-- Footer -->
+          <div class="receipt-footer">
+            <p class="footer-thank">Thank you for shopping!</p>
+            <p class="footer-sub">Come back soon 🙏</p>
+            <!-- Static barcode placeholder (full barcode rendered in print popup) -->
+            <div class="receipt-barcode">
+              <div class="barcode-static"></div>
+              <p class="barcode-text">{{ successSale.invoiceNumber || successSale._id }}</p>
+            </div>
+          </div>
+
+          <!-- Torn bottom edge -->
+          <div class="tear-edge bottom-tear"></div>
+        </div>
+      </div>
+
+    } @else {
+      <!-- Normal Checkout Form -->
+      <div class="modal-header">
+        <h2 class="modal-title">Checkout</h2>
+        <button class="modal-close-btn" (click)="close()" [disabled]="isLoading" id="btn-close-checkout">
+          ✕
+        </button>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <div class="section-label">Order Summary</div>
+        <div class="summary-items">
+          @for (item of items; track item.productId) {
+            <div class="summary-item">
+              <span class="summary-item-name">{{ item.name }}</span>
+              <span class="summary-item-qty">×{{ item.quantity }} ({{ item.unitType }})</span>
+              <span class="summary-item-total">GH₵{{ item.total | number:'1.2-2' }}</span>
+            </div>
+          }
+        </div>
+        <div class="summary-totals">
+          <div class="summary-row">
+            <span>Subtotal</span><span>GH₵{{ subtotal | number:'1.2-2' }}</span>
+          </div>
+          @if (discountAmount > 0) {
+            <div class="summary-row discount-color">
+              <span>Discount</span><span>−GH₵{{ discountAmount | number:'1.2-2' }}</span>
+            </div>
+          }
+          <div class="summary-row summary-total-row">
+            <span>Total</span><span class="checkout-total-value">GH₵{{ total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="form-section">
+        <div class="section-label">Payment Method</div>
+        <div class="payment-methods">
+          <button
+            class="pay-btn"
+            [class.active]="paymentMethod === 'cash'"
+            (click)="setPaymentMethod('cash')"
+            id="pay-btn-cash"
+          >
+            <span class="pay-icon">💵</span> Cash
+          </button>
+          <button
+            class="pay-btn"
+            [class.active]="paymentMethod === 'transfer'"
+            (click)="setPaymentMethod('transfer')"
+            id="pay-btn-transfer"
+          >
+            <span class="pay-icon">📱</span> Transfer
+          </button>
+          <button
+            class="pay-btn"
+            [class.active]="paymentMethod === 'mixed'"
+            (click)="setPaymentMethod('mixed')"
+            id="pay-btn-mixed"
+          >
+            <span class="pay-icon">🔀</span> Mixed
+          </button>
+        </div>
+      </div>
+
+      <!-- Cash Fields -->
+      @if (paymentMethod === 'cash' || paymentMethod === 'mixed') {
+        <div class="form-section cash-fields">
+          <label class="form-label" for="cash-received-input">
+            {{ paymentMethod === 'mixed' ? 'Cash Portion' : 'Cash Received' }}
+          </label>
+          <input
+            id="cash-received-input"
+            type="number"
+            class="form-input cash-input"
+            [(ngModel)]="cashReceived"
+            (ngModelChange)="onCashReceivedChange()"
+            [min]="0"
+            step="0.01"
+          />
+          @if (paymentMethod === 'cash') {
+            <div class="change-display" [class.positive]="cashChange > 0">
+              <span class="change-label">Change</span>
+              <span class="change-value">GH₵{{ cashChange | number:'1.2-2' }}</span>
+            </div>
+            @if (cashReceived > 0 && cashReceived < total) {
+              <p class="cash-warning">⚠️ Cash received is less than total amount</p>
+            }
+          }
+        </div>
+      }
+
+      <!-- Transfer Reference -->
+      @if (paymentMethod === 'transfer' || paymentMethod === 'mixed') {
+        <div class="form-section">
+          <label class="form-label" for="ref-number-input">Reference Number (Optional)</label>
+          <input
+            id="ref-number-input"
+            type="text"
+            class="form-input"
+            [(ngModel)]="referenceNumber"
+            placeholder="e.g. MoMo ref #..."
+          />
+        </div>
+      }
+
+      <!-- Error -->
+      @if (errorMessage) {
+        <div class="checkout-error">⚠️ {{ errorMessage }}</div>
+      }
+
+      <!-- Submit -->
+      <button
+        class="btn-submit-sale"
+        (click)="submitSale()"
+        [disabled]="!canSubmit()"
+        id="btn-submit-sale"
+      >
+        @if (isLoading) {
+          <span class="submit-spinner"></span> Processing...
+        } @else {
+          ✔ Complete Sale — GH₵{{ total | number:'1.2-2' }}
+        }
+      </button>
+    }
+  </div>
+</div>

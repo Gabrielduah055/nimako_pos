@@ -1,0 +1,126 @@
+<div class="search-wrapper">
+  <!-- Search Input -->
+  <div class="search-header">
+    <span class="search-title-icon">🔎</span>
+    <span class="search-title-text">Product Search</span>
+  </div>
+
+  <div class="search-input-row">
+    <div class="search-input-container">
+      <span class="search-icon-inner">🔍</span>
+      <input
+        id="product-search-input"
+        type="text"
+        class="search-input"
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchInput()"
+        placeholder="Search by name, SKU... (F3)"
+        autocomplete="off"
+      />
+      @if (isLoading) {
+        <span class="search-spinner"></span>
+      }
+      @if (searchQuery && !isLoading) {
+        <button class="clear-btn" (click)="clearSearch()" title="Clear search">✕</button>
+      }
+    </div>
+  </div>
+
+  <!-- Results -->
+  @if (hasSearched && !isLoading) {
+    <div class="search-results">
+      @if (errorMessage) {
+        <div class="search-error">⚠️ {{ errorMessage }}</div>
+      } @else if (products.length === 0) {
+        <div class="no-results">
+          <span>📦</span>
+          <p>No products found for "{{ searchQuery }}"</p>
+        </div>
+      } @else {
+        <div class="results-count">{{ products.length }} product(s) found</div>
+        <div class="results-list">
+          @for (product of products; track product._id) {
+            <div
+              class="product-card"
+              [class.disabled]="product.stock <= 0"
+              (click)="product.stock > 0 && openUnitSelector(product)"
+              [id]="'product-card-' + product._id"
+            >
+              <div class="product-info">
+                <div class="product-name">{{ product.name }}</div>
+                @if (product.category) {
+                  <div class="product-category">{{ product.category }}</div>
+                }
+                <div class="product-barcode">{{ product.barcode }}</div>
+              </div>
+              <div class="product-meta">
+                <div class="product-prices">
+                  <div class="price-row">
+                    <span class="price-label">Single</span>
+                    <span class="price-value">GH₵{{ product.priceSingle | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="price-row bulk">
+                    <span class="price-label">Bulk</span>
+                    <span class="price-value">GH₵{{ product.priceBulk | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+                <div class="stock-badge" [ngClass]="getStockClass(product)">
+                  {{ getStockLabel(product) }}
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Unit Selector Modal -->
+@if (selectedProduct) {
+  <div class="modal-backdrop" (click)="closeUnitSelector()">
+    <div class="unit-selector-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Add to Cart</h3>
+        <button class="modal-close" (click)="closeUnitSelector()">✕</button>
+      </div>
+
+      <div class="modal-product-name">{{ selectedProduct.name }}</div>
+
+      <div class="unit-toggle-group">
+        <button
+          class="unit-btn"
+          [class.active]="pendingUnitType === 'single'"
+          (click)="pendingUnitType = 'single'"
+          id="unit-btn-single"
+        >
+          Single<br/>
+          <small>GH₵{{ selectedProduct.priceSingle | number:'1.2-2' }}</small>
+        </button>
+        <button
+          class="unit-btn"
+          [class.active]="pendingUnitType === 'bulk'"
+          (click)="pendingUnitType = 'bulk'"
+          id="unit-btn-bulk"
+        >
+          Bulk (×{{ selectedProduct.bulkQuantity }})<br/>
+          <small>GH₵{{ selectedProduct.priceBulk | number:'1.2-2' }}</small>
+        </button>
+      </div>
+
+      <div class="qty-control">
+        <button class="qty-btn" (click)="decrementQty()" id="btn-qty-dec">−</button>
+        <span class="qty-display">{{ pendingQuantity }}</span>
+        <button class="qty-btn" (click)="incrementQty()" id="btn-qty-inc">+</button>
+      </div>
+
+      <div class="modal-total">
+        Total: <strong>GH₵{{ (getPendingPrice() * pendingQuantity) | number:'1.2-2' }}</strong>
+      </div>
+
+      <button class="btn-add-to-cart" (click)="confirmAddToCart()" id="btn-confirm-add">
+        ➕ Add to Cart
+      </button>
+    </div>
+  </div>
+}

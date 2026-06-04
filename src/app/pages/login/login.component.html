@@ -1,0 +1,91 @@
+<div class="login-page">
+  <!-- Background decoration -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <div class="login-card">
+    <!-- Logo / Brand -->
+    <div class="brand">
+      <div class="brand-logo">🧼</div>
+      <div class="brand-text">
+        <h1 class="brand-name">Nimako POS</h1>
+        <p class="brand-sub">Wholesale Management System</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <h2 class="login-heading">Cashier Sign In</h2>
+    <p class="login-subtext">Enter your credentials to access the POS terminal</p>
+
+    <!-- Error -->
+    @if (errorMessage) {
+      <div class="error-box" role="alert">
+        <span>⚠️</span> {{ errorMessage }}
+      </div>
+    }
+
+    <!-- Form -->
+    <div class="form-group">
+      <label class="form-label" for="login-email">Email Address</label>
+      <div class="input-wrapper">
+        <span class="input-icon">✉</span>
+        <input
+          id="login-email"
+          type="email"
+          class="form-input"
+          [(ngModel)]="email"
+          (keydown)="onKeydown($event)"
+          placeholder="cashier@nimako.com"
+          autocomplete="email"
+          [disabled]="isLoading"
+        />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="login-password">Password</label>
+      <div class="input-wrapper">
+        <span class="input-icon">🔒</span>
+        <input
+          id="login-password"
+          [type]="showPassword ? 'text' : 'password'"
+          class="form-input"
+          [(ngModel)]="password"
+          (keydown)="onKeydown($event)"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          [disabled]="isLoading"
+        />
+        <button
+          class="toggle-password"
+          type="button"
+          (click)="showPassword = !showPassword"
+          [title]="showPassword ? 'Hide password' : 'Show password'"
+          id="btn-toggle-password"
+        >
+          {{ showPassword ? '🙈' : '👁' }}
+        </button>
+      </div>
+    </div>
+
+    <button
+      id="btn-login"
+      class="btn-login"
+      (click)="login()"
+      [disabled]="isLoading"
+    >
+      @if (isLoading) {
+        <span class="login-spinner"></span>
+        <span>Signing in...</span>
+      } @else {
+        <span>Sign In →</span>
+      }
+    </button>
+
+    <p class="login-footer">
+      Nimako Soap & Detergent Wholesale · POS v1.0
+    </p>
+  </div>
+</div>

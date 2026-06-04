@@ -1,0 +1,146 @@
+<div class="cart-wrapper">
+  <!-- Cart Header -->
+  <div class="cart-header">
+    <div class="cart-title">
+      <span class="cart-icon">🛒</span>
+      <span>Shopping Cart</span>
+      @if (!isEmpty) {
+        <span class="cart-badge">{{ itemCount }}</span>
+      }
+    </div>
+    @if (!isEmpty) {
+      <button class="btn-clear" (click)="clearCart()" id="btn-clear-cart" title="Clear all items">
+        🗑 Clear
+      </button>
+    }
+  </div>
+
+  <!-- Cart Items -->
+  <div class="cart-items-area">
+    @if (isEmpty) {
+      <div class="empty-cart">
+        <div class="empty-icon">🛒</div>
+        <p>Cart is empty</p>
+        <p class="empty-sub">Scan or search a product to get started</p>
+      </div>
+    } @else {
+      <div class="cart-items-list">
+        @for (item of items; track item.productId + item.unitType; let i = $index) {
+          <div class="cart-item" [id]="'cart-item-' + i">
+            <!-- Item header -->
+            <div class="item-top">
+              <div class="item-name-group">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-barcode">{{ item.barcode }}</span>
+              </div>
+              <button class="item-remove" (click)="removeItem(i)" [id]="'btn-remove-' + i" title="Remove item">
+                ✕
+              </button>
+            </div>
+
+            <!-- Unit Type Toggle -->
+            <div class="item-unit-toggle">
+              <button
+                class="unit-pill"
+                [class.active]="item.unitType === 'single'"
+                (click)="setUnitType(i, 'single')"
+                [id]="'unit-single-' + i"
+              >
+                Single
+              </button>
+              <button
+                class="unit-pill"
+                [class.active]="item.unitType === 'bulk'"
+                (click)="setUnitType(i, 'bulk')"
+                [id]="'unit-bulk-' + i"
+              >
+                Bulk
+              </button>
+            </div>
+
+            <!-- Qty + Price -->
+            <div class="item-bottom">
+              <div class="qty-row">
+                <button class="qty-btn" (click)="decrementQty(i)" [id]="'btn-dec-' + i">−</button>
+                <span class="qty-num">{{ item.quantity }}</span>
+                <button class="qty-btn" (click)="incrementQty(i)" [id]="'btn-inc-' + i">+</button>
+              </div>
+              <div class="item-price-group">
+                <span class="unit-price">GH₵{{ item.unitPrice | number:'1.2-2' }} each</span>
+                <span class="item-total">GH₵{{ item.total | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Totals Section -->
+  @if (!isEmpty) {
+    <div class="cart-totals">
+      <div class="totals-row subtotal-row">
+        <span>Subtotal</span>
+        <span>GH₵{{ subtotal | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- Discount -->
+      <div class="discount-section">
+        <button class="btn-discount-toggle" (click)="toggleDiscountPanel()" id="btn-discount-toggle">
+          <span>🏷 Discount</span>
+          @if (discountAmount > 0) {
+            <span class="discount-applied">−GH₵{{ discountAmount | number:'1.2-2' }}</span>
+          }
+          <span class="toggle-arrow">{{ showDiscountPanel ? '▲' : '▼' }}</span>
+        </button>
+
+        @if (showDiscountPanel) {
+          <div class="discount-panel">
+            <div class="discount-type-toggle">
+              <button
+                class="dtype-btn"
+                [class.active]="discountType === 'percent'"
+                (click)="discountType = 'percent'; onDiscountChange()"
+                id="btn-discount-percent"
+              >%</button>
+              <button
+                class="dtype-btn"
+                [class.active]="discountType === 'fixed'"
+                (click)="discountType = 'fixed'; onDiscountChange()"
+                id="btn-discount-fixed"
+              >GH₵</button>
+            </div>
+            <input
+              id="discount-input"
+              type="number"
+              class="discount-input"
+              [(ngModel)]="discountValue"
+              (ngModelChange)="onDiscountChange()"
+              [min]="0"
+              [max]="discountType === 'percent' ? 100 : subtotal"
+              [placeholder]="discountType === 'percent' ? 'e.g. 10' : 'e.g. 5.00'"
+            />
+          </div>
+        }
+
+        @if (discountAmount > 0) {
+          <div class="totals-row discount-row">
+            <span>Discount</span>
+            <span class="discount-val">−GH₵{{ discountAmount | number:'1.2-2' }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Total -->
+      <div class="totals-row total-row">
+        <span>TOTAL</span>
+        <span class="total-amount">GH₵{{ total | number:'1.2-2' }}</span>
+      </div>
+
+      <!-- Checkout Button -->
+      <button class="btn-checkout" (click)="checkout()" id="btn-checkout">
+        💳 Checkout
+      </button>
+    </div>
+  }
+</div>

@@ -1,1 +1,215 @@
-/* You can add global styles to this file, and also import other style files */
+/* ─── Google Fonts ───────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ─── CSS Variables — Dark POS Theme ───────────────────────── */
+:root {
+  /* Surfaces */
+  --surface-0: #0a0b0e;
+  --surface-1: #111318;
+  --surface-2: #181b22;
+  --surface-3: #1f2330;
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --text-primary: #f1f5f9;
+  --text-muted: #64748b;
+
+  /* Brand */
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+
+  /* Status */
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ─── Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--surface-0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Focus ring ─────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Inputs global ──────────────────────────────────────────── */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* ─── Selection ──────────────────────────────────────────────── */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+  color: #fff;
+}
+
+/* ─── Print — show ONLY the thermal receipt, hide everything else ─── */
+@media print {
+  /* 1. Make body scrollable and white */
+  html, body {
+    overflow: auto !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* 2. Hide ALL top-level content by default */
+  body > * {
+    display: none !important;
+  }
+
+  /* 3. Walk the Angular component tree back to visible */
+  body > app-root,
+  body > app-root > app-pos,
+  body > app-root > app-pos > app-checkout-modal,
+  body > app-root > app-pos app-checkout-modal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* 4. Hide the backdrop overlay and modal chrome */
+  .checkout-backdrop {
+    position: static !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .checkout-modal {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-height: none !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* 5. Hide everything inside modal EXCEPT the thermal receipt */
+  .receipt-actions,
+  .no-print,
+  .modal-header,
+  .order-summary,
+  .form-section,
+  .payment-methods,
+  .cash-fields,
+  .checkout-error,
+  .btn-submit-sale {
+    display: none !important;
+  }
+
+  /* 6. Make the receipt page and thermal paper fully visible */
+  .receipt-page {
+    display: block !important;
+  }
+
+  .thermal-receipt {
+    display: block !important;
+    box-shadow: none !important;
+    width: 80mm !important;
+    margin: 0 auto !important;
+    font-size: 11px !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* 7. Ensure text colour is black for everything inside receipt */
+  .thermal-receipt * {
+    color: #000 !important;
+    background: transparent !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 8. Keep coloured elements */
+  .payment-badge,
+  .bar {
+    background: #000 !important;
+    color: #fff !important;
+  }
+}
+
+/* ── html5-qrcode global overrides ──────────────────────────
+   Must live in global styles (not ::ng-deep) so they reach the
+   dynamically injected video element without misaligning the
+   BarcodeDetector scan-region in Angular emulated encapsulation.
+────────────────────────────────────────────────────────────── */
+
+/* Make the video fill the container */
+#pos-qr-reader video {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+  display: block;
+}
+
+/* Hide built-in html5-qrcode UI chrome we don't need */
+#pos-qr-reader__header_message,
+#pos-qr-reader__status_span,
+#pos-qr-reader__dashboard_section_swaplink,
+#pos-qr-reader__dashboard,
+#pos-qr-reader img {
+  display: none !important;
+}
+
+/* Transparent scan box — lets our custom overlay show through */
+#pos-qr-reader__scan_region {
+  background: transparent !important;
+  border: none !important;
+}
