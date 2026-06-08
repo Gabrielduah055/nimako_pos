@@ -1,10 +1,16 @@
 {
   "name": "nimako-pos",
   "version": "0.0.0",
+  "main": "dist-electron/main.js",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:cashier:web": "ng serve",
+    "start:electron": "ng build && node scripts/fix-electron-base.cjs && tsc -p tsconfig.electron.json && electron .",
     "build": "ng build",
+    "build:cashier": "ng build",
+    "build:electron": "ng build --configuration production && node scripts/fix-electron-base.cjs && tsc -p tsconfig.electron.json",
+    "package:windows": "npm run build:electron && electron-builder --win",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -17,6 +23,7 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "bcryptjs": "^3.0.3",
     "html5-qrcode": "^2.3.8",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
@@ -24,9 +31,12 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.2.25",
-    "@angular/cli": "^19.2.25",
+    "@angular/cli": "^21.2.14",
     "@angular/compiler-cli": "^19.2.0",
     "@types/jasmine": "~5.1.0",
+    "@types/node": "^20.14.2",
+    "electron": "^42.3.3",
+    "electron-builder": "^26.0.12",
     "jasmine-core": "~5.6.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -34,5 +44,24 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.7.2"
+  },
+  "build": {
+    "appId": "com.nimako.pos",
+    "productName": "Nimako POS",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/nimako_pos/browser/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }

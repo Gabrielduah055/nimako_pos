@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -17,6 +17,7 @@ export class LoginComponent {
   isLoading = false;
   errorMessage = '';
   showPassword = false;
+  isOnline = navigator.onLine;
 
   constructor(private authService: AuthService, private router: Router) {
     // Redirect if already logged in
@@ -27,7 +28,9 @@ export class LoginComponent {
 
   login(): void {
     if (!this.email.trim() || !this.password.trim()) {
-      this.errorMessage = 'Please enter your email and password.';
+      this.errorMessage = this.isOnline
+        ? 'Please enter your email and password.'
+        : 'Please enter your email and local offline PIN.';
       return;
     }
     this.isLoading = true;
@@ -48,6 +51,8 @@ export class LoginComponent {
           this.errorMessage = 'Invalid email or password.';
         } else if (err?.status === 403) {
           this.errorMessage = 'Your account is deactivated. Contact an administrator.';
+        } else if (err?.message) {
+          this.errorMessage = err.message;
         } else {
           this.errorMessage = 'Login failed. Please check your connection and try again.';
         }
@@ -59,5 +64,15 @@ export class LoginComponent {
     if (event.key === 'Enter') {
       this.login();
     }
+  }
+
+  @HostListener('window:online')
+  onOnline(): void {
+    this.isOnline = true;
+  }
+
+  @HostListener('window:offline')
+  onOffline(): void {
+    this.isOnline = false;
   }
 }

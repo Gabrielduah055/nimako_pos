@@ -11,6 +11,6 @@ export const routes: Routes = [
     component: PosComponent,
     canActivate: [authGuard, cashierGuard]
   },
-  { path: '', redirectTo: '/pos', pathMatch: 'full' },
-  { path: '**', redirectTo: '/pos' }
+  { path: '', redirectTo: 'pos', pathMatch: 'full' },
+  { path: '**', redirectTo: 'pos' }
 ];
