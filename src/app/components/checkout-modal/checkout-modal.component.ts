@@ -3,9 +3,11 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { SaleService } from '../../core/services/sale.service';
 import { AuthService, StoredUser } from '../../core/services/auth.service';
 import { CartItem, SaleRequest, Sale } from '../../core/models/cart-item.model';
+import { ElectronService } from '../../core/services/electron.service';
 
 @Component({
   selector: 'app-checkout-modal',
@@ -33,7 +35,11 @@ export class CheckoutModalComponent implements OnChanges {
   successSale: Sale | null = null;
   cashierName = '';
 
-  constructor(private saleService: SaleService, private authService: AuthService) {
+  constructor(
+    private saleService: SaleService,
+    private authService: AuthService,
+    private electron: ElectronService
+  ) {
     this.cashierName = this.authService.getUser()?.name || 'Cashier';
   }
 
@@ -94,22 +100,29 @@ export class CheckoutModalComponent implements OnChanges {
     this.snapshotPaymentMethod = this.paymentMethod;
 
     const user = this.authService.getUser();
-    // Strip to only the fields the backend requires per item
-    const mappedItems = this.items.map(item => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      unitType: item.unitType,
-      unitPrice: item.unitPrice
-    }));
+    const currentSession = this.electron.isElectron
+      ? await firstValueFrom(this.electron.getCurrentSession()).catch(() => null)
+      : null;
+    if (this.electron.isElectron && (!currentSession || currentSession.cashierId !== user?._id)) {
+      this.isLoading = false;
+      this.errorMessage = 'An active cashier session is required before completing a sale.';
+      return;
+    }
 
     const saleData: SaleRequest = {
-      items: mappedItems as any,
+      items: this.items,
       subtotal: this.subtotal,
       discount: this.discountAmount,
+      discountType: this.discountAmount > 0 ? 'fixed' : 'none',
+      discountValue: this.discountAmount,
       total: this.total,
       paymentMethod: this.paymentMethod,
       cashierId: user?._id || '',
+      cashierName: user?.name || this.cashierName,
+      sessionId: currentSession?.id,
       cashReceived: this.paymentMethod !== 'transfer' ? this.cashReceived : undefined,
+      cashChange: this.paymentMethod !== 'transfer' ? this.cashChange : 0,
+      customerName: this.customerName.trim() || 'Walk-in Customer',
       referenceNumber: this.referenceNumber.trim() || undefined
     };
 
@@ -117,6 +130,9 @@ export class CheckoutModalComponent implements OnChanges {
       next: (sale: Sale) => {
         this.isLoading = false;
         this.successSale = sale;
+        if (this.electron.isElectron && navigator.onLine && this.authService.getToken() !== 'offline-local-session') {
+          this.saleService.syncPendingTransactions(this.authService.getToken() ?? undefined).subscribe();
+        }
         // Do NOT emit saleCompleted yet — wait for user to click "New Sale"
         // so the receipt stays visible.
       },

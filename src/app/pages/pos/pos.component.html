@@ -32,6 +32,18 @@
         ➕ New Sale
       </button>
 
+      <button class="btn-session-action" (click)="openPinModal(currentCashierHasPin ? 'update' : 'setup')" title="Set or update local offline PIN">
+        {{ currentCashierHasPin ? 'Update PIN' : 'Set PIN' }}
+      </button>
+
+      <button class="btn-session-action" (click)="lockPos()" title="Lock POS for break">
+        Lock
+      </button>
+
+      <button class="btn-session-action btn-end-shift" (click)="openEndShiftModal()" title="End shift with closing cash">
+        End Shift
+      </button>
+
       <button class="btn-logout" (click)="logout()" id="btn-header-logout" title="Logout (Ctrl+Shift+L)">
         ⏻
       </button>
@@ -44,6 +56,20 @@
     <span class="shortcut"><kbd>F2</kbd> Scanner</span>
     <span class="shortcut"><kbd>F3</kbd> Search</span>
     <span class="shortcut"><kbd>Ctrl+Shift+L</kbd> Logout</span>
+    <span class="sync-spacer"></span>
+    <span class="connection-pill" [class.online]="isOnline" [class.offline]="!isOnline">
+      {{ isOnline ? 'Online' : 'Offline' }}
+    </span>
+    <span class="sync-stat">Pending: {{ pendingSyncCount }}</span>
+    @if (failedSyncCount > 0) {
+      <span class="sync-stat failed">Failed: {{ failedSyncCount }}</span>
+    }
+    @if (lastSyncAt) {
+      <span class="sync-stat">Last: {{ lastSyncAt | date:'shortTime' }}</span>
+    }
+    <button class="btn-sync-now" (click)="syncNow()" [disabled]="isSyncing || !isOnline" id="btn-sync-now">
+      {{ isSyncing ? 'Syncing...' : 'Sync Now' }}
+    </button>
   </div>
 
   <!-- ─── Main Layout ─────────────────────────────────────────── -->
@@ -84,6 +110,103 @@
       (closed)="onCheckoutClosed()"
       (saleCompleted)="onSaleCompleted()"
     ></app-checkout-modal>
+  }
+
+  @if (showPinModal) {
+    <div class="session-modal-backdrop">
+      <section class="session-modal" role="dialog" aria-modal="true" aria-labelledby="pin-modal-title">
+        <h2 id="pin-modal-title">{{ pinModalMode === 'setup' ? 'Set Local PIN' : 'Update Local PIN' }}</h2>
+        <p class="session-modal-copy">This PIN is stored only on this POS terminal for offline cashier login.</p>
+
+        <label class="session-field">
+          <span>New PIN</span>
+          <input
+            type="password"
+            inputmode="numeric"
+            autocomplete="new-password"
+            maxlength="8"
+            [(ngModel)]="localPin"
+            (keydown.enter)="saveLocalPin()"
+          />
+        </label>
+
+        <label class="session-field">
+          <span>Confirm PIN</span>
+          <input
+            type="password"
+            inputmode="numeric"
+            autocomplete="new-password"
+            maxlength="8"
+            [(ngModel)]="confirmLocalPin"
+            (keydown.enter)="saveLocalPin()"
+          />
+        </label>
+
+        @if (pinError) {
+          <div class="session-error">{{ pinError }}</div>
+        }
+
+        <div class="session-modal-actions">
+          <button class="btn-secondary" (click)="closePinModal()">Cancel</button>
+          <button class="btn-primary" (click)="saveLocalPin()">Save PIN</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (showEndShiftModal) {
+    <div class="session-modal-backdrop">
+      <section class="session-modal" role="dialog" aria-modal="true" aria-labelledby="end-shift-title">
+        <h2 id="end-shift-title">End Shift</h2>
+        <p class="session-modal-copy">Enter the cash counted in the drawer before closing this cashier session.</p>
+
+        <label class="session-field">
+          <span>Closing cash</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            [(ngModel)]="closingCash"
+            (keydown.enter)="endShift()"
+          />
+        </label>
+
+        @if (endShiftError) {
+          <div class="session-error">{{ endShiftError }}</div>
+        }
+
+        <div class="session-modal-actions">
+          <button class="btn-secondary" (click)="closeEndShiftModal()">Cancel</button>
+          <button class="btn-primary" (click)="endShift()">Close Shift</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (showLockOverlay) {
+    <div class="lock-overlay">
+      <section class="lock-panel" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+        <div class="lock-icon">POS</div>
+        <h2 id="lock-title">POS Locked</h2>
+        <p>Enter your local PIN to resume this cashier session.</p>
+
+        <input
+          type="password"
+          inputmode="numeric"
+          autocomplete="current-password"
+          maxlength="8"
+          [(ngModel)]="unlockPin"
+          (keydown.enter)="unlockPos()"
+          autofocus
+        />
+
+        @if (unlockError) {
+          <div class="session-error">{{ unlockError }}</div>
+        }
+
+        <button class="btn-primary" (click)="unlockPos()">Unlock</button>
+      </section>
+    </div>
   }
 
   <!-- ─── Toast Notification ─────────────────────────────────── -->

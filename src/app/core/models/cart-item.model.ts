@@ -16,12 +16,20 @@ export interface SaleRequest {
   items: CartItem[];
   subtotal: number;
   discount: number;
+  discountType?: 'percentage' | 'fixed' | 'none';
+  discountValue?: number;
   total: number;
   paymentMethod: 'cash' | 'transfer' | 'mixed';
   cashierId: string;
+  cashierName?: string;
+  sessionId?: string;
   customerName?: string;
   cashReceived?: number;
+  cashChange?: number;
   referenceNumber?: string;
+  localTransactionId?: string;
+  invoiceNumber?: string;
+  createdAt?: string;
 }
 
 export interface Product {
@@ -54,6 +62,7 @@ export interface AuthResponse {
 
 export interface Sale {
   _id: string;
+  localTransactionId?: string;
   invoiceNumber?: string;
   items: CartItem[];
   subtotal: number;
@@ -62,6 +71,8 @@ export interface Sale {
   paymentMethod: 'cash' | 'transfer' | 'mixed';
   cashierId: string;
   cashierName?: string;
+  sessionId?: string;
+  syncStatus?: 'pending' | 'syncing' | 'synced' | 'failed';
   customerName?: string;
   cashReceived?: number;
   cashChange?: number;
